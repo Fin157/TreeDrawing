@@ -17,15 +17,17 @@ void DrawTrees()
 List<Tree> TakeInputs(out Vector2 canvasSize)
 {
     List<Tree> trees = new();
-    canvasSize = new(0, 0);
+    canvasSize = new(0, 0); // Used for determining the size of the drawing canvas we need (to fit all the trees there)
     string inputLine = Console.ReadLine();
 
     while (inputLine != "")
     {
-        string[] splitInput = inputLine.Split(' ');
+        // Load a tree from the inputs we got
+        string[] splitInput = inputLine.Split(' '); // Chop up the input to distill just the numbers from it
         Tree t = new(int.Parse(splitInput[0]) - 1, int.Parse(splitInput[1]) - 1, int.Parse(splitInput[2]), int.Parse(splitInput[3]));
-        Vector2 treeArea = t.GetTreeArea();
+        Vector2 treeArea = t.GetRequiredCanvasSize();
 
+        // Increase the size of the canvas if the current tree doesn't fit there
         if (canvasSize.x < treeArea.x)
             canvasSize.x = treeArea.x;
         if (canvasSize.y < treeArea.y)
@@ -60,7 +62,7 @@ char[,] Draw(List<Tree> trees, Vector2 canvasSize)
 {
     char[,] buffer = new char[canvasSize.x, canvasSize.y];
 
-    // Fill the buffer with '.' characters
+    // Fill the buffer with '.' characters (represents an empty character on the canvas)
     for (int y = 0; y < buffer.GetLength(1); y++)
         for (int x = 0; x < buffer.GetLength(0); x++)
             buffer[x, y] = '.';
@@ -74,7 +76,7 @@ char[,] Draw(List<Tree> trees, Vector2 canvasSize)
 void DrawTree(char[,] buffer, Tree t)
 {
     // Draw the leaves of the tree
-    for (int y = 0; y < t.treeHeight; y++)
+    for (int y = 0; y < t.treeCrownHeight; y++)
     {
         int yPos = t.position.y + y;
 
@@ -84,7 +86,7 @@ void DrawTree(char[,] buffer, Tree t)
     }
     
     // Draw the trunk
-    int trunkStartPos = t.position.y + t.treeHeight;
+    int trunkStartPos = t.position.y + t.treeCrownHeight;
 
     for (int y = 0; y < t.trunkHeight; y++)
         buffer[t.position.x, trunkStartPos + y] = '*';
@@ -95,31 +97,32 @@ void DrawTree(char[,] buffer, Tree t)
 public struct Tree
 {
     public Vector2 position;
-    public int treeHeight; // The height of the tree part with leaves
+    public int treeCrownHeight;
     public int trunkHeight;
 
     public Tree(Vector2 position, int treeHeight, int trunkHeight)
     {
         this.position = position;
-        this.treeHeight = treeHeight;
+        this.treeCrownHeight = treeHeight;
         this.trunkHeight = trunkHeight;
     }
 
     public Tree(int xPos, int yPos, int treeHeight, int trunkHeight)
     {
         position = new(xPos, yPos);
-        this.treeHeight= treeHeight;
+        this.treeCrownHeight= treeHeight;
         this.trunkHeight = trunkHeight;
     }
 
-    // Calculates the area a tree instance occupies
-    public Vector2 GetTreeArea()
+    // Calculates the rightmost and bottommost position of the tree (x and y of the returned Vector2 respectively)
+    // The returned Vector2 is enough to decide if we need to increase the canvas size or not
+    public Vector2 GetRequiredCanvasSize()
     {
         // Calculate the y maximum of the tree (the bottommost position of its trunk)
-        int yMaximum = position.y + (treeHeight - 1) + trunkHeight;
+        int yMaximum = position.y + (treeCrownHeight - 1) + trunkHeight;
 
-        // Calculate the x maximum of the tree (the rightmost position of the leaves)
-        int xMaximum = position.x + (treeHeight - 1);
+        // Calculate the x maximum of the tree (the rightmost position of the tree crown)
+        int xMaximum = position.x + (treeCrownHeight - 1);
 
         // We have to add 1 to compensate working with indexing the buffer starting with 0 rather than 1
         return new(xMaximum + 1, yMaximum + 1);
