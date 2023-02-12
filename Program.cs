@@ -51,6 +51,9 @@ void DrawToScreen(char[,] buffer)
             Console.Write(buffer[x, y]);
         Console.WriteLine();
     }
+
+    Console.WriteLine("\nPress any key to stop the program.");
+    Console.ReadKey();
 }
 
 char[,] Draw(List<Tree> trees, Vector2 canvasSize)
