@@ -1,19 +1,20 @@
 ﻿
-DrawTrees();
+DrawTrees(); // Call the main function of the program
 
 void DrawTrees()
 {
-    // Input
+    // Gathering input
     List<Tree> trees = TakeInputs(out Vector2 canvasSize);
 
     // Calculations and buffering draw data
     char[,] buffer = Draw(trees, canvasSize);
 
-    // Output
+    // Output to console
     DrawToScreen(buffer);
 }
 
 #region Data input
+// Gathers inputs from the user and validates them
 List<Tree> TakeInputs(out Vector2 canvasSize)
 {
     List<Tree> trees = new();
@@ -36,6 +37,7 @@ List<Tree> TakeInputs(out Vector2 canvasSize)
         Tree t = new(parsedInputs[0] - 1, parsedInputs[1] - 1, parsedInputs[2], parsedInputs[3]);
         Vector2 treeArea = t.GetRequiredCanvasSize();
 
+        // Check if the tree is inside the buffer
         if (t.IsTreeValid())
         {
             // Increase the size of the canvas if the current tree doesn't fit there
@@ -56,6 +58,7 @@ List<Tree> TakeInputs(out Vector2 canvasSize)
     return trees;
 }
 
+// Checks if a single input set is valid and also outputs the parsed inputs if it is
 bool IsInputValid(string[] inputs, out int[] parsedInputs)
 {
     // We need four elements of the array, otherwise the input is invalid
@@ -112,9 +115,10 @@ char[,] Draw(List<Tree> trees, Vector2 canvasSize)
     return buffer;
 }
 
+// Draws one tree to the buffer
 void DrawTree(char[,] buffer, Tree t)
 {
-    // Draw the leaves of the tree
+    // Draw the crown of the tree
     for (int y = 0; y < t.treeCrownHeight; y++)
     {
         int yPos = t.position.y + y;
@@ -153,6 +157,8 @@ public struct Tree
         this.trunkHeight = trunkHeight;
     }
 
+    // Gets the bottommost and rightmost position this tree reaches to
+    // We can find out if the current canvas size is enough for this tree from that data
     public Vector2 GetRequiredCanvasSize()
     {
         // Calculate the y maximum of the tree (the bottommost position of its trunk)
