@@ -23,22 +23,61 @@ List<Tree> TakeInputs(out Vector2 canvasSize)
     while (inputLine != "")
     {
         // Load a tree from the inputs we got
-        string[] splitInput = inputLine.Split(' '); // Chop up the input to distill just the numbers from it
-        Tree t = new(int.Parse(splitInput[0]) - 1, int.Parse(splitInput[1]) - 1, int.Parse(splitInput[2]), int.Parse(splitInput[3]));
+        string[] splitInput = inputLine.Split(' ', StringSplitOptions.RemoveEmptyEntries); // Chop up the input to distill just the numbers from it
+
+        // Input validation
+        if (!IsInputValid(splitInput, out int[] parsedInputs))
+        {
+            inputLine = Console.ReadLine();
+            continue;
+        }
+
+        // Subtract one from the coordinate integers to convert them to 0-based ones
+        Tree t = new(parsedInputs[0] - 1, parsedInputs[1] - 1, parsedInputs[2], parsedInputs[3]);
         Vector2 treeArea = t.GetRequiredCanvasSize();
 
-        // Increase the size of the canvas if the current tree doesn't fit there
-        if (canvasSize.x < treeArea.x)
-            canvasSize.x = treeArea.x;
-        if (canvasSize.y < treeArea.y)
-            canvasSize.y = treeArea.y;
+        if (t.IsTreeValid())
+        {
+            // Increase the size of the canvas if the current tree doesn't fit there
+            if (canvasSize.x < treeArea.x)
+                canvasSize.x = treeArea.x;
+            if (canvasSize.y < treeArea.y)
+                canvasSize.y = treeArea.y;
 
-        trees.Add(t);
+            trees.Add(t);
+        }
+        // Alert the user that this input is invalid and continue to the next input
+        else
+            Console.WriteLine("These input coordinates are invalid. Please try again.");
         
         inputLine = Console.ReadLine();
     }
 
     return trees;
+}
+
+bool IsInputValid(string[] inputs, out int[] parsedInputs)
+{
+    // We need four elements of the array, otherwise the input is invalid
+    if (inputs.Length != 4)
+    {
+        Console.WriteLine("The input must consist of four numbers. Please try again.");
+        parsedInputs = Array.Empty<int>();
+        return false;
+    }
+
+    // Check for parseability of all of the inputs
+    parsedInputs = new int[inputs.Length];
+    for (int i = 0; i < inputs.Length; i++)
+    {
+        if (!int.TryParse(inputs[i], out parsedInputs[i]))
+        {
+            Console.WriteLine("The input is in incorrect format. Please try again.");
+            return false;
+        }
+    }
+
+    return true;
 }
 #endregion
 
@@ -114,8 +153,6 @@ public struct Tree
         this.trunkHeight = trunkHeight;
     }
 
-    // Calculates the rightmost and bottommost position of the tree (x and y of the returned Vector2 respectively)
-    // The returned Vector2 is enough to decide if we need to increase the canvas size or not
     public Vector2 GetRequiredCanvasSize()
     {
         // Calculate the y maximum of the tree (the bottommost position of its trunk)
@@ -126,6 +163,19 @@ public struct Tree
 
         // We have to add 1 to compensate working with indexing the buffer starting with 0 rather than 1
         return new(xMaximum + 1, yMaximum + 1);
+    }
+    
+    /// <summary>
+    /// Checks if this tree instance is valid
+    /// (doesn't overlap to negative coordinates on the canvas)
+    /// </summary>
+    /// <returns>True if the tree stays in positive coordinates, otherwise false</returns>
+    public bool IsTreeValid()
+    {
+        bool isXValid = position.x - (treeCrownHeight - 1) >= 0;
+        bool isYValid = position.y >= 0;
+
+        return isXValid && isYValid;
     }
 }
 
